@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 
 import XSvg from '../../../components/svgs/X'
 
-import { MdOutlineMail } from 'react-icons/md'
+import { MdOutlineMail, MdVisibility, MdVisibilityOff } from 'react-icons/md'
 import { MdPassword } from 'react-icons/md'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -15,6 +15,8 @@ const LoginPage = () => {
   })
 
   const queryClient = useQueryClient()
+
+  const [showPassword, setShowPassword] = useState(false) // State to manage password visibility
 
   const { mutate: loginMutate, isError, isPending, error } = useMutation({
     mutationFn: async ({ username, password }) => {
@@ -54,6 +56,10 @@ const LoginPage = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev)
+  }
+
   return (
     <div className="max-w-screen-xl mx-auto flex h-screen">
       <div className="flex-1 hidden lg:flex items-center  justify-center">
@@ -78,14 +84,18 @@ const LoginPage = () => {
           <label className="input input-bordered rounded flex items-center gap-2">
             <MdPassword />
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'} // Toggle input type based on showPassword state
               className="grow"
               placeholder="Password"
               name="password"
               onChange={handleInputChange}
               value={formData.password}
             />
+            <button type="button" onClick={togglePasswordVisibility}>
+              {showPassword ? <MdVisibilityOff /> : <MdVisibility />}
+            </button>
           </label>
+
           <button className="btn rounded-full btn-primary text-white">
             {isPending ? 'Loading...' : 'Login'}
           </button>

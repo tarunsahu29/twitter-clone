@@ -1,9 +1,9 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 
 import XSvg from '../../../components/svgs/X'
 
-import { MdOutlineMail } from 'react-icons/md'
+import { MdOutlineMail, MdVisibility, MdVisibilityOff } from 'react-icons/md'
 import { FaUser } from 'react-icons/fa'
 import { MdPassword } from 'react-icons/md'
 import { MdDriveFileRenameOutline } from 'react-icons/md'
@@ -17,6 +17,9 @@ const SignUpPage = () => {
     fullName: '',
     password: '',
   })
+
+  const navigate = useNavigate() // Initialize navigate
+  const [showPassword, setShowPassword] = useState(false) // State to manage password visibility
 
   const { mutate, isError, isPending, error } = useMutation({
     mutationFn: async ({ email, username, fullName, password }) => {
@@ -35,10 +38,15 @@ const SignUpPage = () => {
       return data
     },
     onSuccess: () => {
-      toast.success('Account created successfully')
+      toast.success('Account created successfully', {
+        duration: 1000,
+      })
+      navigate('/login') // Redirect to login page on success
     },
     onError: (error) => {
-      toast.error(error.message)
+      toast.error(error.message, {
+        duration: 1000,
+      })
     },
   }) //when you want to manipulate the data such as create, update and delete
 
@@ -49,6 +57,10 @@ const SignUpPage = () => {
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
+  }
+
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev)
   }
 
   return (
@@ -101,13 +113,16 @@ const SignUpPage = () => {
           <label className="input input-bordered rounded flex items-center gap-2">
             <MdPassword />
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'} // Toggle input type based on showPassword state
               className="grow"
               placeholder="Password"
               name="password"
               onChange={handleInputChange}
               value={formData.password}
             />
+            <button type="button" onClick={togglePasswordVisibility}>
+              {showPassword ? <MdVisibilityOff /> : <MdVisibility />}
+            </button>
           </label>
           <button className="btn rounded-full btn-primary text-white">
             {isPending ? 'Loading...' : 'Sign Up'}

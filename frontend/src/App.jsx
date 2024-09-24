@@ -12,8 +12,8 @@ import { useQuery } from '@tanstack/react-query'
 import LoadingSpinner from './components/common/LoadingSpinner'
 
 function App() {
-  const { data: authUser, isLoading, error, isError } = useQuery({
-    queryKey: ['authUser'],
+  const { data: authUser, isLoading } = useQuery({
+    queryKey: ['authUser'], // to give a unique name to our query and refer to it later
     queryFn: async () => {
       const res = await fetch('/api/auth/me')
       const data = await res.json()
@@ -25,6 +25,7 @@ function App() {
       console.log('Auth user here:', data)
       return data
     },
+    retry: false,
   })
 
   if (isLoading) {
@@ -37,7 +38,7 @@ function App() {
   return (
     <div className="flex max-w-6xl mx-auto">
       {/* common component since not wrapped with Routes */}
-      <Sidebar />
+      {authUser && <Sidebar />}
       <Routes>
         <Route
           path="/"
@@ -60,7 +61,7 @@ function App() {
           element={authUser ? <ProfilePage /> : <Navigate to="/login" />}
         />
       </Routes>
-      <RightPanel />
+      {authUser && <RightPanel />}
       <Toaster />
     </div>
   )

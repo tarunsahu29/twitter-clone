@@ -1,32 +1,16 @@
 import Notification from '../models/notification.model.js'
 
 export const getNotifications = async (req, res) => {
-  const userId = req.user._id
-
   try {
-    // Step 1: Get all notifications for the user
-    const notifications = await Notification.find({ to: userId }).populate({
-      path: 'from',
-      select: 'username profileImg',
-    })
-
-    // Step 2: Count unread notifications using aggregate
-    const unreadCountResult = await Notification.aggregate([
-      { $match: { to: userId, read: false } }, // Find unread notifications for this user
-      { $group: { _id: null, unreadCount: { $sum: 1 } } }, // Count unread notifications
-    ])
-
-    const unreadCount =
-      unreadCountResult.length > 0 ? unreadCountResult[0].unreadCount : 0
-
-    // Step 3: Mark all notifications as read
+    const userId = req.user._id
+    const notifications = await Notification.find({ to: userId })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: 'from',
+        select: 'username profileImg',
+      })
     await Notification.updateMany({ to: userId }, { read: true })
-
-    // Step 4: Send the notifications and the unread count in the response
-    res.status(200).json({
-      unreadCount,
-      notifications,
-    })
+    res.status(200).json(notifications)
   } catch (error) {
     console.log('Error in getNotifications controller', error.message)
     res.status(500).json({

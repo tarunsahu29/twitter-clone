@@ -5,19 +5,61 @@ import { FaRegBookmark } from 'react-icons/fa6'
 import { FaTrash } from 'react-icons/fa'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
+import LoadingSpinner from './LoadingSpinner'
 
 const Post = ({ post }) => {
   const [comment, setComment] = useState('')
+  const [showDeleteModal, setShowDeleteModal] = useState(false) // state to show/hide delete modal
+  const queryClient = useQueryClient()
+  const { data: authUser } = useQuery({ queryKey: ['authUser'] })
+
+  const { mutate: deletePost, isPending } = useMutation({
+    mutationFn: async () => {
+      try {
+        const res = await fetch(`/api/posts/${post._id}`, {
+          method: 'DELETE',
+        })
+        const data = await res.json()
+        if (!res.ok) {
+          throw new Error(data.error || 'Something went wrong!')
+        }
+        return data
+      } catch (error) {
+        throw new Error(error)
+      }
+    },
+    onSuccess: () => {
+      toast.success('Post deleted successfully', {
+        duration: 1000,
+      })
+      //invalidate the query to refetch the data
+      queryClient.invalidateQueries({ queryKey: ['posts'] })
+    },
+  })
+
   const postOwner = post.user
   const isLiked = false
 
-  const isMyPost = true
+  const isMyPost = authUser._id === post.user._id
 
   const formattedDate = '1h'
 
   const isCommenting = false
 
-  const handleDeletePost = () => {}
+  const handleDeletePost = () => {
+    deletePost()
+    setShowDeleteModal(false) // Close the modal after deletion
+  }
+
+  const handleOpenDeleteModal = () => {
+    setShowDeleteModal(true)
+  }
+
+  const handleCloseDeleteModal = () => {
+    setShowDeleteModal(false)
+  }
 
   const handlePostComment = (e) => {
     e.preventDefault()
@@ -50,10 +92,14 @@ const Post = ({ post }) => {
             </span>
             {isMyPost && (
               <span className="flex justify-end flex-1">
-                <FaTrash
-                  className="cursor-pointer hover:text-red-500"
-                  onClick={handleDeletePost}
-                />
+                {!isPending && (
+                  <FaTrash
+                    className="cursor-pointer hover:text-red-500"
+                    onClick={handleOpenDeleteModal}
+                  />
+                )}
+
+                {isPending && <LoadingSpinner size="sm" />}
               </span>
             )}
           </div>
@@ -176,6 +222,33 @@ const Post = ({ post }) => {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <dialog className="modal modal-open bg-black bg-opacity-80">
+          <div className="modal-box bg-gray-900 text-white rounded-lg shadow-xl p-6">
+            <h3 className="text-xl font-semibold text-white">Delete Tweet?</h3>
+            <p className="py-4 text-sm text-gray-400">
+              This can’t be undone and it will be removed from your profile as
+              well as from the timeline of any accounts that follow you.
+            </p>
+            <div className="modal-action flex justify-between">
+              <button
+                className="w-full py-2 px-4 rounded-full text-gray-300 border border-gray-500 hover:bg-gray-700 transition duration-200"
+                onClick={handleCloseDeleteModal}
+              >
+                Cancel
+              </button>
+              <button
+                className="w-full py-2 px-4 ml-4 rounded-full bg-red-600 text-white font-bold hover:bg-red-700 transition duration-200"
+                onClick={handleDeletePost}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </dialog>
+      )}
     </>
   )
 }

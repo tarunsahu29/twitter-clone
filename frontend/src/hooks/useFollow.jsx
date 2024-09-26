@@ -4,7 +4,7 @@ import toast from 'react-hot-toast'
 const useFollow = () => {
   const queryClient = useQueryClient()
 
-  const { mutate: followUnfollow, isPending, isError, error } = useMutation({
+  const { mutate: followUnfollow, isPending } = useMutation({
     mutationFn: async (userId) => {
       try {
         const res = await fetch(`/api/users/follow/${userId}`, {
@@ -25,7 +25,7 @@ const useFollow = () => {
         queryClient.invalidateQueries({ queryKey: ['authUser'] }),
       ])
     },
-    onError: () => {
+    onError: (error) => {
       toast.error(error.message)
     },
   })

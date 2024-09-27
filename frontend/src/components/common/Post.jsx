@@ -102,9 +102,7 @@ const Post = ({ post }) => {
         throw new Error(error.message)
       }
     },
-    onSuccess: (data) => {
-      const updatedComments = data.updatedComments
-      console.log('Updated Comments:', updatedComments) // Log updated comments
+    onSuccess: () => {
       toast.success('Comment added successfully', {
         duration: 1000,
       })
